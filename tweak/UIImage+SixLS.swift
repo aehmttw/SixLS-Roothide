@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import roothide
 
 extension UIImage {
 	func imageResized(to targetSize: CGSize) -> UIImage? {
@@ -32,7 +33,7 @@ extension UIImage {
 
 	class func forSix(named name: String) -> UIImage? {
 #if TWEAK
-		let path = "/Library/Application Support/Six/\(name).png"
+		let path = jbroot("/Library/Application Support/Six/\(name).png")
 		if access("/var/jb/", F_OK) == 0 {
 			return UIImage(contentsOfFile: "/var/jb" + path)
 		}

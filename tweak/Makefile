@@ -3,6 +3,7 @@ INSTALL_TARGET_PROCESSES = SpringBoard
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = SixLS
+SixLS_FRAMEWORKS = AudioToolbox
 SixLS_FILES = $(wildcard *.swift) $(wildcard *.m) Tweak.x
 SixLS_PRIVATE_FRAMEWORKS = UserNotificationsKit
 SixLS_CFLAGS = -fobjc-arc -I./Headers

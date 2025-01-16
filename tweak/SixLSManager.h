@@ -3,6 +3,7 @@
 #import <Foundation/Foundation.h>
 #import "Headers/UserNotificationsKit/NCNotificationRequest.h"
 #import "Headers/CoverSheet/CSScrollView.h"
+#import <UIKit/UIKit.h>
 
 @interface SixLSManager : NSObject
 

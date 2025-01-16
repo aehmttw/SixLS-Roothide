@@ -1,5 +1,5 @@
 Package: xyz.skitty.sixls
-Name: Six (LS)
+Name: Six (LS) - Roothide
 Depends: mobilesubstrate, preferenceloader, firmware (>= 11.0), firmware(>= 12.2) | org.swift.libswift (>= 5.0)
 Version: 1.1
 Architecture: iphoneos-arm

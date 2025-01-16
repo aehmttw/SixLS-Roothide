@@ -7,6 +7,7 @@
 #import <UserNotificationsKit/UserNotificationsKit.h>
 #import <SpringBoardFoundation/SBFLockScreenDateViewController.h>
 #import <rootless.h>
+#import <roothide.h>
 #import "Headers/SpringBoard/SpringBoard.h"
 #import "SixLSManager.h"
 #import "SixLS-Swift.h"
@@ -44,7 +45,7 @@ static void refreshPrefs() {
 		settings = nil;
 	}
 	if (!settings) {
-		settings = [[NSMutableDictionary alloc] initWithContentsOfFile:ROOT_PATH_NS(@"/var/mobile/Library/Preferences/xyz.skitty.sixls.plist")];
+		settings = [[NSMutableDictionary alloc] initWithContentsOfFile:jbroot(@"/var/mobile/Library/Preferences/xyz.skitty.sixls.plist")];
 	}
 
 	enabled = [([settings objectForKey:@"enabled"] ?: @(YES)) boolValue];
@@ -121,7 +122,6 @@ static void setIsLocked(BOOL locked) {
 - (void)layoutSix {
 	CSMainPageContentViewController *telf = self;
 	if (telf.sixView) {
-		telf.sixView.notifications = telf.sixView.notificationList.allNotificationRequests;
 		[telf.view bringSubviewToFront:telf.sixView];
 		if (enabled && isLocked) {
 			[mainPageController.sixView present];
@@ -142,7 +142,7 @@ static void setIsLocked(BOOL locked) {
 	if (enabled && unlockSound && mainPageController.sixView.alpha == 1) {
 		SystemSoundID sound = 0;
 		AudioServicesDisposeSystemSoundID(sound);
-		AudioServicesCreateSystemSoundID((CFURLRef) CFBridgingRetain([NSURL fileURLWithPath:ROOT_PATH_NS(@"/Library/Application Support/Six/unlock.caf")]), &sound);
+		AudioServicesCreateSystemSoundID((CFURLRef) CFBridgingRetain([NSURL fileURLWithPath:jbroot(@"/Library/Application Support/Six/unlock.caf")]), &sound);
 		AudioServicesPlaySystemSound((SystemSoundID)sound);
 	}
 }
@@ -156,7 +156,7 @@ static void setIsLocked(BOOL locked) {
 	if (enabled && lockSound) {
 		SystemSoundID sound = 0;
 		AudioServicesDisposeSystemSoundID(sound);
-		AudioServicesCreateSystemSoundID((CFURLRef) CFBridgingRetain([NSURL fileURLWithPath:ROOT_PATH_NS(@"/Library/Application Support/Six/lock.caf")]), &sound);
+		AudioServicesCreateSystemSoundID((CFURLRef) CFBridgingRetain([NSURL fileURLWithPath:jbroot(@"/Library/Application Support/Six/lock.caf")]), &sound);
 		AudioServicesPlaySystemSound((SystemSoundID)sound);
 	} else {
 		%orig;
@@ -173,7 +173,7 @@ static void setIsLocked(BOOL locked) {
 	if (enabled && chargeSound && self.isOnAC) {
 		SystemSoundID sound = 0;
 		AudioServicesDisposeSystemSoundID(sound);
-		AudioServicesCreateSystemSoundID((CFURLRef) CFBridgingRetain([NSURL fileURLWithPath:ROOT_PATH_NS(@"/Library/Application Support/Six/connect_power.caf")]), &sound);
+		AudioServicesCreateSystemSoundID((CFURLRef) CFBridgingRetain([NSURL fileURLWithPath:jbroot(@"/Library/Application Support/Six/connect_power.caf")]), &sound);
 		AudioServicesPlaySystemSound((SystemSoundID)sound);
 	} else {
 		%orig;
@@ -185,7 +185,7 @@ static void setIsLocked(BOOL locked) {
 	if (enabled && chargeSound && [self _powerSourceWantsToPlayChime]) {
 		SystemSoundID sound = 0;
 		AudioServicesDisposeSystemSoundID(sound);
-		AudioServicesCreateSystemSoundID((CFURLRef) CFBridgingRetain([NSURL fileURLWithPath:ROOT_PATH_NS(@"/Library/Application Support/Six/connect_power.caf")]), &sound);
+		AudioServicesCreateSystemSoundID((CFURLRef) CFBridgingRetain([NSURL fileURLWithPath:jbroot(@"/Library/Application Support/Six/connect_power.caf")]), &sound);
 		AudioServicesPlaySystemSound((SystemSoundID)sound);
 	} else {
 		%orig;
@@ -216,7 +216,7 @@ static void setIsLocked(BOOL locked) {
 	if (enabled && unlockSound) {
 		SystemSoundID sound = 0;
 		AudioServicesDisposeSystemSoundID(sound);
-		AudioServicesCreateSystemSoundID((CFURLRef) CFBridgingRetain([NSURL fileURLWithPath:ROOT_PATH_NS(@"/Library/Application Support/Six/unlock.caf")]), &sound);
+		AudioServicesCreateSystemSoundID((CFURLRef) CFBridgingRetain([NSURL fileURLWithPath:jbroot(@"/Library/Application Support/Six/unlock.caf")]), &sound);
 		AudioServicesPlaySystemSound((SystemSoundID)sound);
 	}
 
@@ -348,27 +348,6 @@ static void setIsLocked(BOOL locked) {
 
 %end
 
-// Hide notifications
-%hook NCNotificationStructuredListViewController // NCNotificationListViewController
-
-- (void)viewDidLoad {
-	%orig;
-	[objectsToUpdate addObject:self];
-	[self layoutSix];
-}
-
-%new
-- (void)layoutSix {
-	NCNotificationStructuredListViewController *telf = self;
-	if (enabled && isLocked && classicNotifications) {
-		telf.view.hidden = YES;
-	} else {
-		telf.view.hidden = NO;
-	}
-}
-
-%end
-
 // Notifications
 %hook NCNotificationDispatcher
 
@@ -379,23 +358,6 @@ static void setIsLocked(BOOL locked) {
 
 %end
 
-%hook NCNotificationMasterList // NCNotificationPriorityList
-
-- (int)insertNotificationRequest:(NCNotificationRequest *)request {
-	int result = %orig;
-
-	NCNotificationMasterList *telf = self;
-
-	if ([self respondsToSelector:@selector(incomingSectionList)]) {
-		mainPageController.sixView.notificationList = telf.incomingSectionList;
-	} else {
-		mainPageController.sixView.notificationList = self;
-	}
-
-	return result;
-}
-
-%end
 
 // Fix disable home with notification sliders
 %hook SixLSNotificationAlertView
@@ -567,8 +529,6 @@ static void displayStatusChanged(CFNotificationCenterRef center, void *observer,
 	NSString *CSFixedFooterViewController = isLegacy ? @"SBDashBoardFixedFooterViewController" : @"CSFixedFooterViewController";
 	NSString *SBFLockScreenDateViewController = isLegacy ? @"SBLockScreenDateViewController" : @"SBFLockScreenDateViewController";
 	NSString *CSModalPresentationViewController = isLegacy ? @"SBDashBoardModalPresentationViewController" : @"CSModalPresentationViewController";
-	NSString *NCNotificationStructuredListViewController = isLegacy ? @"NCNotificationListViewController" : @"NCNotificationStructuredListViewController";
-	NSString *NCNotificationMasterList = isLegacy ? @"NCNotificationPriorityList" : @"NCNotificationMasterList";
 
 	NSString *SixLSNotificationAlertView = @"SixLS.NotificationAlertView";
 	NSString *SixLSNotificationCell = @"SixLS.NotificationCell";
@@ -577,6 +537,6 @@ static void displayStatusChanged(CFNotificationCenterRef center, void *observer,
 
 	NSString *CSTeachableMomentsContainerViewController = isLegacy ? @"SBTeachableMomentsContainerViewController" : @"CSTeachableMomentsContainerViewController";
 
-	%init(CSCoverSheetViewController=NSClassFromString(CSCoverSheetViewController), CSMainPageContentViewController=NSClassFromString(CSMainPageContentViewController), CSPasscodeViewController=NSClassFromString(CSPasscodeViewController), CSFixedFooterViewController=NSClassFromString(CSFixedFooterViewController), SBFLockScreenDateViewController=NSClassFromString(SBFLockScreenDateViewController), CSModalPresentationViewController=NSClassFromString(CSModalPresentationViewController), NCNotificationStructuredListViewController=NSClassFromString(NCNotificationStructuredListViewController), NCNotificationMasterList=NSClassFromString(NCNotificationMasterList), SixLSNotificationAlertView=NSClassFromString(SixLSNotificationAlertView), SixLSNotificationCell=NSClassFromString(SixLSNotificationCell), CSCoverSheetTransitionSettings=NSClassFromString(CSCoverSheetTransitionSettings));
+	%init(CSCoverSheetViewController=NSClassFromString(CSCoverSheetViewController), CSMainPageContentViewController=NSClassFromString(CSMainPageContentViewController), CSPasscodeViewController=NSClassFromString(CSPasscodeViewController), CSFixedFooterViewController=NSClassFromString(CSFixedFooterViewController), SBFLockScreenDateViewController=NSClassFromString(SBFLockScreenDateViewController), CSModalPresentationViewController=NSClassFromString(CSModalPresentationViewController),  SixLSNotificationAlertView=NSClassFromString(SixLSNotificationAlertView), SixLSNotificationCell=NSClassFromString(SixLSNotificationCell), CSCoverSheetTransitionSettings=NSClassFromString(CSCoverSheetTransitionSettings));
 	%init(Notched, CSCoverSheetViewController=NSClassFromString(CSCoverSheetViewController), CSTeachableMomentsContainerViewController=NSClassFromString(CSTeachableMomentsContainerViewController));
 }
