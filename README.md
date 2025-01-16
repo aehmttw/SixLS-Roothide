@@ -1,6 +1,7 @@
 # Six (LS)
 Bring back the iOS 6 Lock Screen to iOS 11 - 14. The original tweak is on https://skitty.xyz/repo/
 
+Check out the original tweak's GitHub here: https://github.com/Skittyblock/SixLS
 
 ## Roothide version
 A note from aehmttw:
